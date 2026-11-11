@@ -1,3 +1,4 @@
+import { PlaylistShuffleBinding } from './PlaylistShuffleButton';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -714,6 +715,9 @@ const GridViewOverlayHost: React.FC<GridViewOverlayHostProps> = ({
                 onEnterPlaybackView={surfaceProps.onEnterPlaybackView}
                 onOpenLattice={surfaceProps.onOpenLattice}
             />
+            {collectionResource && displaySelectedCollection && ['playlist', 'favorites', 'liked'].includes(displaySelectedCollection.type) && (
+                <PlaylistShuffleBinding resource={collectionResource} playback={playbackPort} />
+            )}
             <AnimatePresence initial={false}>
                 {layerPresentation.showBackdrop && (
                     <motion.div

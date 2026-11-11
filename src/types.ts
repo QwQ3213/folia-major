@@ -1368,6 +1368,8 @@ export interface ReplayGainInfo {
 }
 
 export interface SongResult {
+    /** Queue occurrence identity for playlist shuffle, retained with the saved queue. */
+    playlistShuffle?: { session: string; occurrence: number };
   id: MediaId;
   name: string;
   artists: Artist[];

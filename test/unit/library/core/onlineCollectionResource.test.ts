@@ -88,6 +88,33 @@ const harness = (
 };
 
 describe('online collection resource: unversioned memory reuse', () => {
+    it('rejects a non-advancing final page in occurrence-preserving mode', async () => {
+        const h = harness([], {
+            getCollectionTracks: vi.fn(async (_collection, input) => ({ items: [song(0)], hasMore: input.offset === 0, nextOffset: 1 })),
+        });
+        const resource = createOnlineCollectionResource('shuffle-stalled', h.deps);
+        resource.prepareForShuffle?.();
+        resource.ensure(playlist({ trackCount: 2 }), {});
+        await settle();
+        expect(resource.getSnapshot().sync.status).toBe('interrupted');
+        expect(resource.getSnapshot().complete).not.toBe(true);
+        resource.dispose();
+    });
+
+    it('preserves repeated songs across real pages when preparing playlist shuffle', async () => {
+        const all = [...songs(200), song(0)];
+        const h = harness(all);
+        const resource = createOnlineCollectionResource('shuffle-rows', h.deps);
+        resource.ensure(playlist({ trackCount: all.length }), {});
+        await settle();
+        resource.prepareForShuffle?.();
+        await settle();
+        expect(resource.getSnapshot().complete).toBe(true);
+        expect(resource.getSnapshot().tracks).toHaveLength(all.length);
+        expect(resource.getSnapshot().tracks.filter(track => track.id === song(0).id)).toHaveLength(2);
+        resource.dispose();
+    });
+
     it('avoids another first-page request after leaving and reopening, then refetches after expiry', async () => {
         vi.useFakeTimers();
         try {

@@ -1,3 +1,4 @@
+import { useAudioSettingsStore } from '@/stores/useAudioSettingsStore';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OnlineLyricsState, UnifiedSong } from '@/types';
 
@@ -14,6 +15,7 @@ import type { OnlineLyricsState, UnifiedSong } from '@/types';
 
 const env = vi.hoisted(() => ({
     blockedIds: new Set<string>(),
+    playedFor: new Map<string, Promise<UnifiedSong>>(),
     external: false,
     externalPrepared: false,
     externalStarts: vi.fn(async (..._args: unknown[]) => {}),
@@ -74,7 +76,7 @@ vi.mock('@/services/onlineMusic/externalPlayback', async importOriginal => ({
     announceExternalPlayback: vi.fn(),
     isExternalRoute: () => env.external,
 }));
-vi.mock('@/services/onlineMusic/songAvailability', () => ({ askPlayedSong: () => null, isSongUnavailable: () => false }));
+vi.mock('@/services/onlineMusic/songAvailability', () => ({ askPlayedSong: (song: UnifiedSong) => env.playedFor.get(String(song.id)) ?? null, isSongUnavailable: () => false }));
 vi.mock('@/services/onlineMusic/resourceCache', () => ({
     hasCachedSongAudio: async () => null,
     getCachedSongCoverUrl: async (song: { id: string }) => { env.note(`wait cover ${song.id}`); return env.coverFor.get(song.id) ?? null; },
@@ -143,6 +145,7 @@ beforeEach(() => {
     vi.stubGlobal('window', { setTimeout: vi.fn(() => 1), setInterval: vi.fn(() => 2), clearTimeout: vi.fn(), clearInterval: vi.fn() });
     resetPlaybackStore();
     env.blockedIds.clear();
+    env.playedFor.clear();
     env.external = false;
     env.externalPrepared = false;
     env.externalStarts.mockClear();
@@ -226,6 +229,51 @@ describe('playSong and the current song (online)', () => {
         unsubscribe();
     });
 
+
+    it('starts a fresh shuffle round without immediately repeating the final song', async () => {
+        const previousLoop = useAudioSettingsStore.getState().loopMode;
+        useAudioSettingsStore.setState({ loopMode: 'all' });
+        const first = { ...songA, playlistShuffle: { session: 'shuffle-round', occurrence: 0 } };
+        const last = { ...songB, playlistShuffle: { session: 'shuffle-round', occurrence: 1 } };
+        usePlaybackStore.setState({ currentSong: last, playQueue: [first, last] });
+        try {
+            const { queue } = mount();
+            await queue.handleNextTrack();
+            await vi.waitFor(() => expect(usePlaybackStore.getState().currentSong?.id).toBe(first.id));
+            expect(usePlaybackStore.getState().playQueue.map(song => song.id)).toEqual([first.id, last.id]);
+        } finally {
+            useAudioSettingsStore.setState({ loopMode: previousLoop });
+        }
+    });
+
+    it('reshuffles after the final playable row and retains an unavailable tail', async () => {
+        const previousLoop = useAudioSettingsStore.getState().loopMode;
+        useAudioSettingsStore.setState({ loopMode: 'all' });
+        const first = { ...songA, playlistShuffle: { session: 'tail-round', occurrence: 0 } };
+        const last = { ...songB, playlistShuffle: { session: 'tail-round', occurrence: 1 } };
+        const blocked = { ...songQ, playlistShuffle: { session: 'tail-round', occurrence: 2 } };
+        env.blockedIds.add(String(blocked.id));
+        usePlaybackStore.setState({ currentSong: last, playQueue: [first, last, blocked] });
+        try {
+            const { queue } = mount();
+            await queue.handleNextTrack();
+            await vi.waitFor(() => expect(usePlaybackStore.getState().currentSong?.id).toBe(first.id));
+            expect(usePlaybackStore.getState().playQueue).toHaveLength(3);
+            expect(usePlaybackStore.getState().playQueue.some(song => song.id === blocked.id)).toBe(true);
+        } finally {
+            useAudioSettingsStore.setState({ loopMode: previousLoop });
+        }
+    });
+
+    it('keeps both occurrence identities when a video is resolved to its song', async () => {
+        const first = { ...songA, playlistShuffle: { session: 'video-round', occurrence: 0 } };
+        const selected = { ...songA, playlistShuffle: { session: 'video-round', occurrence: 1 } };
+        env.playedFor.set(String(songA.id), Promise.resolve(songB));
+        const { queue } = mount();
+        await queue.playSong(selected, [first, selected]);
+        expect(usePlaybackStore.getState().currentSong?.playlistShuffle?.occurrence).toBe(1);
+        expect(usePlaybackStore.getState().playQueue.map(song => song.playlistShuffle?.occurrence)).toEqual([0, 1]);
+    });
 
     it('advances past a known unplayable row while retaining the playlist order', async () => {
         const songC = { ...songA, id: '3', name: 'C', sourceRef: { kind: 'online' as const, providerId: 'bodian', mediaId: '3' } };

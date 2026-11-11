@@ -1,3 +1,4 @@
+import { cancelShufflePreparation, inheritShuffleOccurrence, rememberShuffleOccurrence } from '../../../services/playlistShuffle/preparation';
 import type { SongResult } from '../../../types';
 import { getOnlineProviderIdForSong, getPlaybackSongKey } from '../../../utils/appPlaybackGuards';
 import { setCurrentSong, usePlaybackStore } from '../../../stores/usePlaybackStore';
@@ -78,6 +79,8 @@ let asks = 0;
 
 /** Every play that has started and has not shown its song yet gives up at its next check. */
 export const dropPlaysInFlight = (): void => {
+    cancelShufflePreparation();
+    rememberShuffleOccurrence(null);
     playsDropped += 1;
     // Every play started so far is answered no by the count above, whatever is abandoned later.
     playsStanding = [];
@@ -94,6 +97,7 @@ const providerDropLog: string[] = [];
  * platforms, local files and Navidrome go on.
  */
 export const dropPlaysOfProvider = (providerId: string): void => {
+    cancelShufflePreparation();
     providerDrops.set(providerId, (providerDrops.get(providerId) ?? 0) + 1);
     providerDropLog.push(providerId);
 };
@@ -209,7 +213,7 @@ export const startRestore = (): (() => boolean) => {
  * back from the load that overtook it.
  */
 export const showSong = (song: SongResult | null): void => {
-    setCurrentSong(song);
+    setCurrentSong(inheritShuffleOccurrence(song));
 };
 
 /**

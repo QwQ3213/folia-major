@@ -1,3 +1,5 @@
+import { cancelShufflePreparation, rememberShuffleOccurrence } from '../../../../services/playlistShuffle/preparation';
+import { shufflePlayableRound } from '../../../../services/playlistShuffle/shuffle';
 import { registerPersonalFmLanding, takePersonalFmLanding } from './personalFmLanding';
 import { usePersonalFmModeStore } from '@/stores/usePersonalFmModeStore';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -502,6 +504,8 @@ export function usePlaybackQueueController({
         // The hook is async, so a later playSong may finish its hook first; this call then drops
         // out instead of replacing the song the user picked last.
         // An automix advance skips the hook (see `isAutomixAdvance`).
+        cancelShufflePreparation();
+        rememberShuffleOccurrence(requestedSong);
         const onFmLanding = takePersonalFmLanding(queue);
         const playSongCallId = ++playSongCallIdRef.current;
         // A route that empties the player while this play waits drops it too (`dropPlaysInFlight`), and so
@@ -558,10 +562,10 @@ export function usePlaybackQueueController({
             const shownQueue = queue.length > 0 ? queue : usePlaybackStore.getState().playQueue;
             const shownKey = getPlaybackSongKey(allowedSong);
             const playedQueue = shownQueue.length > 0
-                ? shownQueue.map(queued => (getPlaybackSongKey(queued) === shownKey ? playedSong : queued))
+                ? shownQueue.map(queued => (getPlaybackSongKey(queued) === shownKey ? { ...playedSong, playlistShuffle: queued.playlistShuffle } : queued))
                 : [playedSong];
             if (onFmLanding) registerPersonalFmLanding(playedQueue, onFmLanding);
-            await latestQueueActionsRef.current.playSong(playedSong, playedQueue, asFm(), options);
+            await latestQueueActionsRef.current.playSong({ ...playedSong, playlistShuffle: allowedSong.playlistShuffle }, playedQueue, asFm(), options);
             return;
         }
         const song = allowedSong;
@@ -1380,6 +1384,21 @@ export function usePlaybackQueueController({
                 stopAtQueueEnd();
             }
             return;
+        }
+
+        if (!isFmMode && !options?.isAutomixAdvance && loopMode === 'all'
+            && currentIndex >= 0 && currentSong
+            && !playQueue.slice(currentIndex + 1).some(isQueueSongPlayable)
+            && playQueue.some(track => track.playlistShuffle)) {
+            if (usePlaybackStore.getState().playQueue !== playQueue) return;
+            const nextRound = shufflePlayableRound(playQueue, getPlaybackSongKey(currentSong), getPlaybackSongKey, isQueueSongPlayable);
+            if (nextRound.length > 0) {
+                setPlayQueue(nextRound);
+                const firstPlayable = nextRound.find(isQueueSongPlayable);
+                if (firstPlayable) void playSong(firstPlayable, nextRound, false, { shouldNavigateToPlayer });
+                else stopAtQueueEnd();
+                return;
+            }
         }
 
         const nextIndex = nextPlayableQueueIndex(playQueue, currentIndex, indexLoopMode, isQueueSongPlayable);

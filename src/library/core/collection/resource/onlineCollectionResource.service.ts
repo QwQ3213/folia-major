@@ -75,6 +75,7 @@ const isShortlyReusable = (collection: OnlineGridViewCollectionDescriptor) => (
 
 export const createOnlineCollectionResource = (key: string, deps: OnlineCollectionResourceDeps): CollectionResource => {
     const state = createCollectionResourceState(key, 'online');
+    let preserveShuffleOccurrences = false;
     let descriptor: OnlineGridViewCollectionDescriptor | null = null;
     let context: CollectionResourceContext = {};
     let started = false;
@@ -144,10 +145,17 @@ export const createOnlineCollectionResource = (key: string, deps: OnlineCollecti
             total: totalTracks,
             // 只有刚读的首页回答里带的总数可信到能直接收尾；缓存、续传时的总数可能来自过期的集合描述。
             ...(upstreamTotal !== undefined ? { upstreamTotal } : {}),
-            fetchPage: pageOffset => deps.getCollectionTracks(collection, { limit: ONLINE_COLLECTION_BACKGROUND_PAGE_SIZE, offset: pageOffset }),
+            fetchPage: async pageOffset => {
+                const page = await deps.getCollectionTracks(collection, { limit: ONLINE_COLLECTION_BACKGROUND_PAGE_SIZE, offset: pageOffset });
+                if (preserveShuffleOccurrences && page.items.length > 0 && page.nextOffset <= pageOffset) {
+                    throw new Error('Playlist pagination did not advance');
+                }
+                return page;
+            },
             // Where the collection names its rows, two rows of one song are two rows; a row that
             // comes a second time (the list moved between two pages) still has its one name.
-            getKey: rowKeyOf,
+            getKey: (track, index) => preserveShuffleOccurrences && (track as UnifiedSong).collectionRowId === undefined
+                ? `${rowKeyOf(track)}@${index}` : rowKeyOf(track),
             isCancelled,
             onPage: (nextTracks, nextOffset, hasMore) => {
                 const visible = withoutTombstones(nextTracks);
@@ -176,7 +184,7 @@ export const createOnlineCollectionResource = (key: string, deps: OnlineCollecti
             }, 'urgent');
             return;
         }
-        state.set({ sync: { status: 'none' } }, 'urgent');
+        state.set({ sync: { status: 'none' }, complete: result.whole }, 'urgent');
     };
 
     // 从头加载：缓存有效就直接用（不完整时接着补页），否则取首页再补页。
@@ -206,7 +214,7 @@ export const createOnlineCollectionResource = (key: string, deps: OnlineCollecti
                 const tracks = withoutTombstones(cached.tracks);
                 upstreamOffset = cached.nextOffset!;
                 loading = false;
-                state.set({ status: 'ready', tracks }, 'urgent');
+                state.set({ status: 'ready', tracks, complete: false }, 'urgent');
                 if (cached.hasMore) {
                     void startSync(tracks, targetTime, cached.total ?? collection.trackCount, upstreamOffset);
                 }
@@ -243,14 +251,14 @@ export const createOnlineCollectionResource = (key: string, deps: OnlineCollecti
             if (likedListRead && !hasMore) deps.endLikedListRead?.(likedListRead, responseTracks, true);
             reusableUntil = now() + UNVERSIONED_COLLECTION_REUSE_MS;
             if (responseTracks.length === 0 && !hasMore) {
-                state.set({ status: 'ready', tracks: [] }, 'urgent');
+                state.set({ status: 'ready', tracks: [], complete: true }, 'urgent');
                 return;
             }
 
             // 大歌单的整表更新交给 renderer 走 transition：打开的同时转场还在飞，不能把它堵住。
             const tracks = withoutTombstones(responseTracks);
             upstreamOffset = nextOffset || responseTracks.length;
-            state.set({ status: 'ready', tracks }, 'background');
+            state.set({ status: 'ready', tracks, complete: !hasMore }, 'background');
             void deps.writeCache(cacheKey(), tracks, targetTime, { nextOffset: upstreamOffset, hasMore, total });
             if (hasMore) {
                 // 首页回答里的总数要比已经读到的位置大，才当上游的总数用：读到了「总数」却还说有，说明那个数只是
@@ -271,6 +279,11 @@ export const createOnlineCollectionResource = (key: string, deps: OnlineCollecti
     return {
         key,
         kind: 'online',
+        prepareForShuffle: () => {
+            if (preserveShuffleOccurrences) return;
+            preserveShuffleOccurrences = true;
+            void load({ bypassCache: true });
+        },
         getSnapshot: state.get,
         subscribe: state.subscribe,
         ensure: (next, nextContext) => {

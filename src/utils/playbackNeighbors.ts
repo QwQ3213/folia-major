@@ -13,9 +13,15 @@ import type { SongResult, StageLoopMode } from '../types';
  * 按 getPlaybackSongKey 比（平台加曲目 id），不按对象比：同一首歌从缓存恢复或换过来源之后是另一个对象。
  * 同一首歌在队列里排了两次时给的是前面那一个。
  */
-export const queueIndexOf = (queue: SongResult[], song: SongResult | null | undefined): number => (
-    song ? queueIndexOfKey(queue, getPlaybackSongKey(song)) : -1
-);
+export const queueIndexOf = (queue: SongResult[], song: SongResult | null | undefined): number => {
+    if (!song) return -1;
+    if (song.playlistShuffle) {
+        const occurrence = queue.findIndex(item => item.playlistShuffle?.session === song.playlistShuffle?.session
+            && item.playlistShuffle?.occurrence === song.playlistShuffle?.occurrence);
+        if (occurrence >= 0) return occurrence;
+    }
+    return queueIndexOfKey(queue, getPlaybackSongKey(song));
+};
 
 /** 同 queueIndexOf，给手里只有 key 的地方用（队列面板的自动滚动只跟着 key 变，不跟着对象变）。 */
 export const queueIndexOfKey = (queue: SongResult[], songKey: string | null): number => (
@@ -135,7 +141,9 @@ export const nextTransitionSong = (
     isFmMode: boolean,
 ): SongResult | null => {
     const currentKey = getPlaybackSongKey(currentSong);
-    const index = queueIndexOfKey(queue, currentKey);
+    const index = queueIndexOf(queue, currentSong);
+    // The new round is selected at the playback boundary, so its first track is not yet preblendable.
+    if (loopMode === 'all' && index === queue.length - 1 && queue.some(track => track.playlistShuffle)) return null;
     if (isFmMode && fmNextIsUnfetchedAt(queue.length, index)) return null;
 
     const next = hasTrackAfter(queue.length, index, loopMode)

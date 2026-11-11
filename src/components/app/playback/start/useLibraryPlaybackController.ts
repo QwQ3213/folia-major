@@ -1,3 +1,4 @@
+import { inheritShuffleOccurrence, preserveShuffleOccurrence } from '../../../../services/playlistShuffle/preparation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import type { MotionValue } from 'framer-motion';
@@ -339,7 +340,7 @@ export function useLibraryPlaybackController({
         const rebuild = (snapshot: SongResult): SongResult | null => {
             if (!isLocalPlaybackSong(snapshot)) return snapshot;
             const localSong = songsById.get(snapshot.localRef.songId);
-            return localSong ? buildLocalQueue([localSong], undefined, catalog)[0] || null : null;
+            return localSong ? preserveShuffleOccurrence(snapshot, buildLocalQueue([localSong], undefined, catalog)[0] || null) : null;
         };
         const playingBefore = usePlaybackStore.getState().currentSong;
         if (playingBefore && !rebuild(playingBefore)) {
@@ -740,6 +741,7 @@ export function useLibraryPlaybackController({
         if (givesUp()) return;
         const initialMeta = await resolveLocalMetadataUI(preparedLocalSong, null);
         if (givesUp()) return;
+        initialMeta.unifiedSong = inheritShuffleOccurrence(initialMeta.unifiedSong)!;
         const initialSongKey = getPlaybackSongKey(initialMeta.unifiedSong);
         // The HiFi route looks for no copy the browser can play: mpv decodes every format itself.
         const recoveredRepresentation = 'blobUrl' in audio ? audio.recoveredCopy(initialSongKey) : null;
@@ -839,7 +841,7 @@ export function useLibraryPlaybackController({
 
                 const updatedMeta = await resolveLocalMetadataUI(updatedLocalSong, matchedSongResult);
                 if (overtaken()) return;
-                setCurrentSong(previous => isSamePlaybackSong(previous, updatedMeta.unifiedSong) ? updatedMeta.unifiedSong : previous);
+                setCurrentSong(previous => isSamePlaybackSong(previous, updatedMeta.unifiedSong) ? preserveShuffleOccurrence(previous, updatedMeta.unifiedSong) : previous);
                 setLyrics(updatedMeta.lyrics);
                 setActiveLocalLyricsSource(updatedMeta.lyricsSource);
                 setIsLyricsLoading(false);
@@ -1084,14 +1086,14 @@ export function useLibraryPlaybackController({
             await (onHifi ? audio.takeServerGainAndFormat() : audio.takeServerGain());
             if (givesUp()) return;
 
-            const unifiedSong = buildUnifiedNavidromeSong(navidromeSong, {
+            const unifiedSong = inheritShuffleOccurrence(buildUnifiedNavidromeSong(navidromeSong, {
                 coverUrl,
                 useOnlineMetadata: matchData?.useOnlineMetadata,
                 matchedArtists: matchData?.matchedArtists,
                 matchedAlbumName: matchData?.matchedAlbumName,
                 matchedLyricsSource: mutableSong.matchedLyricsSource || matchData?.matchedLyricsSource,
                 matchedLyricsProviderPlatform: mutableSong.matchedLyricsProviderPlatform || matchData?.matchedLyricsProviderPlatform,
-            });
+            }))!;
             // The HiFi route looks for no copy the browser can play: mpv decodes every format itself.
             const recoveredRepresentation = onHifi ? null : audio.recoveredCopy(unifiedSong);
 
@@ -1476,7 +1478,7 @@ export function useLibraryPlaybackController({
 
                 if (updatedSong) {
                     const resolvedUi = await resolveLocalMetadataUI(updatedSong, null);
-                    setCurrentSong(previous => isSamePlaybackSong(previous, resolvedUi.unifiedSong) ? resolvedUi.unifiedSong : previous);
+                    setCurrentSong(previous => isSamePlaybackSong(previous, resolvedUi.unifiedSong) ? preserveShuffleOccurrence(previous, resolvedUi.unifiedSong) : previous);
 
                     if (updatedSong.useOnlineCover && updatedSong.onlineMetadata?.coverUrl) {
                         try {

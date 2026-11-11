@@ -1,6 +1,7 @@
 
 
 export default {
+  "playlistShuffle": {"play": "Shuffle play", "hint": "Shuffle the complete playlist", "preparing": "Preparing shuffle: {{count}} tracks", "cancel": "Cancel", "empty": "No playable tracks", "failed": "Could not read the complete playlist. Please retry."},
   "scratchpad": {
     "title": "Scratchpad",
     "count_one": "{{count}} song",
@@ -894,6 +895,7 @@ export default {
       "home-navidrome": { "title": "Open Navidrome", "description": "Open Navidrome tab" },
       "home-radio": { "title": "Open radio", "description": "Open radio tab" },
       "home-explore": { "title": "Open explore", "description": "Open explore tab" },
+      "playlist-shuffle": {"title": "Shuffle playlist", "description": "Play the complete playlist in a new random order"},
       "grid-sort-file-name": { "title": "Sort by file name", "description": "Order the local tracks by their file name" },
       "grid-sort-modified-date": { "title": "Sort by modified date", "description": "Order the local tracks by when the file was last changed" },
       "grid-sort-album-track": { "title": "Sort by album track number", "description": "Order the local tracks by disc and track number" },

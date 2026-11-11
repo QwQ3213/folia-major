@@ -1,3 +1,4 @@
+import PlaylistShuffleButton from '../../../app/PlaylistShuffleButton';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion, useMotionValue, animate, AnimatePresence, useDragControls, useIsPresent } from 'framer-motion';
 import { ChevronLeft, Crosshair, Disc, Download, ImagePlus, Play, Plus, Loader2, Heart, ListPlus, NotebookPen, Pencil, RefreshCw, Trash2, Star, Tags } from 'lucide-react';
@@ -2016,6 +2017,7 @@ export const GridView: React.FC<GridViewProps> = ({
                                         ? t('playlist.playFilteredTracks', { count: contextActionTracks.length })
                                         : t('playlist.playAll')}
                                 </button>
+                                <PlaylistShuffleButton className="w-full py-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 bg-zinc-500/10 hover:bg-zinc-500/20 disabled:opacity-40" />
                                 <button
                                     onClick={() => {
                                         if (onAddAllToQueue && contextActionTracks.length > 0) {

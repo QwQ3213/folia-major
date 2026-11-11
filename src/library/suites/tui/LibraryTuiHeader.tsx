@@ -1,3 +1,4 @@
+import PlaylistShuffleButton from '../../app/PlaylistShuffleButton';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LibraryCollectionDescriptor } from '../../core/collection/collection.contract';
@@ -74,6 +75,7 @@ const LibraryTuiHeader: React.FC<LibraryTuiHeaderProps> = ({
     return (
         <header className="shrink-0 border-b border-current/15 px-4 py-2 text-[13px]">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <PlaylistShuffleButton />
                 <button type="button" onClick={onBack} className="opacity-70 hover:opacity-100" data-tui-back>
                     {`[← ${t('libraryTui.back')}]`}
                 </button>

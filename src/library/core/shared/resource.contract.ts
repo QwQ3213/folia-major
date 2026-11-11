@@ -46,6 +46,8 @@ export interface CollectionResourceSnapshot {
     readonly kind: CollectionResourceKind;
     /** 当前加载所对应的集合版本（见 collectionRevision）。 */
     readonly revision: string;
+    /** True only when the live upstream pagination explicitly reached its end. */
+    readonly complete?: boolean;
     readonly status: CollectionLoadStatus;
     /** 已取得的曲目；每次变化都是新数组，从不原地修改。 */
     readonly tracks: SongResult[];
@@ -72,6 +74,8 @@ export interface CollectionResource {
     ensure(descriptor: LibraryCollectionDescriptor, context: CollectionResourceContext): void;
     /** 跳过缓存从头重新加载；正在加载时忽略。 */
     reload(): void;
+    /** Re-read raw playlist occurrences when the consumer needs every original row. */
+    prepareForShuffle?(): void;
     /** 从中断的 offset 续传后台补页。 */
     resumeSync(): void;
     /** 释放后再次打开同一集合时，能否直接沿用这份已加载的结果。 */

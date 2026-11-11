@@ -1,3 +1,4 @@
+import PlaylistShuffleButton from '../../app/PlaylistShuffleButton';
 import React, { useCallback, useMemo } from 'react';
 import { ChevronLeft, FoldHorizontal, ListFilter, ListPlus, Maximize2, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -117,6 +118,7 @@ const FullSeam: React.FC<{ layer: BravaisLayer; depth: number; actions: BravaisS
                         <Play aria-hidden />{seam.scopeLabels?.play ?? t('libraryBravais.playAll')}
                     </button>
                 )}
+                <PlaylistShuffleButton actionId="shuffle-playlist" className="bravais-chrome-button" />
                 {seam.onEnqueueScope && (
                     <button type="button" className="bravais-chrome-button" data-bravais-seam-action="enqueue-scope" onClick={seam.onEnqueueScope}>
                         <ListPlus aria-hidden />{seam.scopeLabels?.enqueue ?? t('libraryBravais.enqueueAll')}

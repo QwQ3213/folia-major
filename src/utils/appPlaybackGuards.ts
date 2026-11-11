@@ -109,7 +109,7 @@ export const replacePlaybackSongInQueue = (
     const nextQueue = queue.map(song => {
         if (getPlaybackSongKey(song) !== replacementKey) return song;
         replaced = true;
-        return replacement;
+        return song.playlistShuffle ? { ...replacement, playlistShuffle: song.playlistShuffle } : replacement;
     });
     return replaced ? nextQueue : [replacement, ...nextQueue];
 };
@@ -126,7 +126,7 @@ export const replacePlaybackSongWhereQueued = (
     const nextQueue = queue.map(song => {
         if (getPlaybackSongKey(song) !== replacementKey) return song;
         replaced = true;
-        return replacement;
+        return song.playlistShuffle ? { ...replacement, playlistShuffle: song.playlistShuffle } : replacement;
     });
     return replaced ? nextQueue : null;
 };

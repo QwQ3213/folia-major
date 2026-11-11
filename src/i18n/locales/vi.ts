@@ -1,6 +1,7 @@
 // Vietnamese (vi) interface text, laid out line for line like en.ts.
 
 export default {
+  "playlistShuffle": {"play": "Phát ngẫu nhiên", "hint": "Trộn toàn bộ danh sách phát", "preparing": "Đang chuẩn bị: {{count}} bài", "cancel": "Hủy", "empty": "Không có bài có thể phát", "failed": "Không thể đọc toàn bộ danh sách. Hãy thử lại."},
   "scratchpad": {
     "title": "Sổ ghi nhanh",
     "count_one": "{{count}} bài",
@@ -894,6 +895,7 @@ export default {
       "home-navidrome": { "title": "Mở Navidrome", "description": "Mở tab Navidrome" },
       "home-radio": { "title": "Mở radio", "description": "Mở tab radio" },
       "home-explore": { "title": "Mở Khám phá", "description": "Mở tab Khám phá" },
+      "playlist-shuffle": {"title": "Trộn danh sách phát", "description": "Phát toàn bộ danh sách theo thứ tự ngẫu nhiên mới"},
       "grid-sort-file-name": { "title": "Sắp xếp theo tên tệp", "description": "Sắp xếp các bản nhạc nội bộ theo tên tệp" },
       "grid-sort-modified-date": { "title": "Sắp xếp theo ngày sửa đổi", "description": "Sắp xếp các bản nhạc nội bộ theo thời gian sửa đổi tệp gần nhất" },
       "grid-sort-album-track": { "title": "Sắp xếp theo số track album", "description": "Sắp xếp các bản nhạc nội bộ theo số đĩa và số track" },

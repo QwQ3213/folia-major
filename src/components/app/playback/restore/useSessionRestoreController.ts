@@ -1,3 +1,4 @@
+import { preserveShuffleOccurrence } from '../../../../services/playlistShuffle/preparation';
 import { useEffect, useRef } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { getFromCache, getLocalSongs } from '../../../../services/db';
@@ -136,7 +137,8 @@ export function useSessionRestoreController({
                         if (!songId) return cached;
                         const localSong = songsById.get(songId);
                         if (!localSong) return null;
-                        return buildLocalQueue([localSong], undefined, catalog)[0] || null;
+                        const rebuilt = buildLocalQueue([localSong], undefined, catalog)[0];
+                        return preserveShuffleOccurrence(cached, rebuilt || null);
                     };
                     lastSong = rebuild(lastSong);
                     lastQueue = (lastQueue || []).map(rebuild).filter((song): song is SongResult => Boolean(song));

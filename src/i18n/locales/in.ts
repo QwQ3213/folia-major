@@ -1,6 +1,7 @@
 
 
 export default {
+  "playlistShuffle": {"play": "Putar acak", "hint": "Acak seluruh playlist", "preparing": "Menyiapkan acak: {{count}} lagu", "cancel": "Batal", "empty": "Tidak ada lagu yang dapat diputar", "failed": "Gagal membaca seluruh playlist. Coba lagi."},
   "scratchpad": {
     "title": "Buku catatan",
     "count_one": "{{count}} lagu",
@@ -894,6 +895,7 @@ export default {
       "home-navidrome": { "title": "Buka Navidrome", "description": "Buka tab Navidrome" },
       "home-radio": { "title": "Buka radio", "description": "Buka tab radio" },
       "home-explore": { "title": "Buka jelajahi", "description": "Buka tab jelajahi" },
+      "playlist-shuffle": {"title": "Acak playlist", "description": "Putar seluruh playlist dalam urutan acak baru"},
       "grid-sort-file-name": { "title": "Urutkan berdasarkan nama berkas", "description": "Urutkan lagu lokal berdasarkan nama berkasnya" },
       "grid-sort-modified-date": { "title": "Urutkan berdasarkan tanggal ubah", "description": "Urutkan lagu lokal berdasarkan waktu berkas terakhir diubah" },
       "grid-sort-album-track": { "title": "Urutkan berdasarkan nomor trek", "description": "Urutkan lagu lokal berdasarkan nomor cakram dan trek" },

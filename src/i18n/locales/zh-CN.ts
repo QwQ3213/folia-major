@@ -1,6 +1,7 @@
 
 
 export default {
+  "playlistShuffle": {"play": "随机播放", "hint": "随机播放完整歌单，不受筛选影响", "preparing": "正在准备随机播放：已读取 {{count}} 首", "cancel": "取消", "empty": "没有可播放的歌曲", "failed": "无法读取完整歌单，请重试。"},
   "scratchpad": {
     "title": "速记簿",
     "count_one": "{{count}} 首",
@@ -894,6 +895,7 @@ export default {
       "home-navidrome": { "title": "打开 Navidrome", "description": "打开 Navidrome tab" },
       "home-radio": { "title": "打开推荐", "description": "打开推荐 tab" },
       "home-explore": { "title": "打开探索", "description": "打开探索 tab" },
+      "playlist-shuffle": {"title": "随机播放歌单", "description": "读取完整歌单，建立新的随机播放顺序"},
       "grid-sort-file-name": { "title": "按文件名排序", "description": "把本地曲目按文件名排列" },
       "grid-sort-modified-date": { "title": "按修改时间排序", "description": "把本地曲目按文件最后修改时间排列" },
       "grid-sort-album-track": { "title": "按音轨号排序", "description": "把本地曲目按碟号和音轨号排列" },

@@ -1,3 +1,4 @@
+import { playlistShuffleCommand } from './playlistShuffleCommand';
 import { PlayerState } from '../../../types';
 import { Heart, ListX, Pause, Piano, Play, Repeat, Shuffle, SkipBack, SkipForward, Star, Undo2, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { executeModeCommand } from './executeModeCommand';
@@ -29,6 +30,7 @@ const stepVolumeUnlessFixed = (context: CommandPaletteContext, delta: number) =>
 };
 
 export const playbackCommands: CommandPaletteCommand[] = [
+    playlistShuffleCommand,
     executeModeCommand,
     queueCommand,
     createToggleCommand(

@@ -36,7 +36,7 @@ export type CollectionSyncOptions<T> = {
     /** The count the provider's own answer gave (the first page's total): reading up to it ends the read. */
     upstreamTotal?: number;
     fetchPage: (offset: number) => Promise<CollectionSyncPage<T>>;
-    getKey: (item: T) => string;
+    getKey: (item: T, index: number) => string;
     /** Checked after every await; a newer sync or an unmount makes the old one stop quietly. */
     isCancelled: () => boolean;
     onPage: (items: T[], offset: number, hasMore: boolean) => void;
